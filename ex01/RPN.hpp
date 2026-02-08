@@ -17,6 +17,8 @@ public:
 private:
 	std::stack<int> _stack;
 	bool isOperator(const std::string &token) const;
+	bool calcOperator(const std::string &token);
+	bool pushNumber(const std::string &token);
 };
 
 #endif
