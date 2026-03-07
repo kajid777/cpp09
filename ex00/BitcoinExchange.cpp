@@ -51,50 +51,86 @@ void BitcoinExchange::loadInput(const std::string &filename) {
 	}
 
 	std::string line;
-	// ヘッダー行をスキップ
 	std::getline(file, line);
 
-	while (std::getline(file, line)) {
-		std::string::size_type pos = line.find(" | ");
-		// " | " がない行は不正なのでスキップ
-		if (pos == std::string::npos)
-			continue;
-
-		std::string date = line.substr(0, pos);
-		std::string valueStr = line.substr(pos + 3);
-		float value = static_cast<float>(std::atof(valueStr.c_str()));
-
-		_input.push_back(std::make_pair(date, value));
-	}
+	while (std::getline(file, line))
+		_input.push_back(line);
 	file.close();
 }
 
-const std::map<std::string, float> &BitcoinExchange::getDatabase() const {
-	return _database;
-}
+bool BitcoinExchange::isValidDate(const std::string &date) {
+	if (date.length() != 10)
+		return false;
+	if (date[4] != '-' || date[7] != '-')
+		return false;
+	for (int i = 0; i < 10; ++i) {
+		if (i == 4 || i == 7)
+			continue;
+		if (date[i] < '0' || date[i] > '9')
+			return false;
+	}
 
-const std::vector<std::pair<std::string, float> > &BitcoinExchange::getInput() const {
-	return _input;
+	int year = std::atoi(date.substr(0, 4).c_str());
+	int month = std::atoi(date.substr(5, 2).c_str());
+	int day = std::atoi(date.substr(8, 2).c_str());
+
+	if (month < 1 || month > 12 || day < 1)
+		return false;
+
+	int maxDay;
+	switch (month) {
+		case 2:
+			maxDay = 28;
+			if (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0))
+				maxDay = 29;
+			break;
+		case 4: case 6: case 9: case 11:
+			maxDay = 30;
+			break;
+		default:
+			maxDay = 31;
+			break;
+	}
+	return day <= maxDay;
 }
 
 void BitcoinExchange::execute() const {
 	for (size_t i = 0; i < _input.size(); ++i) {
-		std::string date_for_search = _input[i].first;
-		float value = _input[i].second;
+		const std::string &line = _input[i];
 
-		// _inputのdateで_databaseを検索（その日付以前で最も近い日付を使う）
-		std::map<std::string, float>::const_iterator it = _database.lower_bound(date_for_search);
-		//lower_bound は std::map の検索関数で、指定したキー以上で最初の要素を返すのでイテレーターを後で一個戻している
-		if (it != _database.end() && it->first == date_for_search) {
-			// 日付完全一致したとき
-			std::cout << date_for_search << ", value:" << value << ", exchange_rate:" << it->second << ", result:" << value * it->second << std::endl;
+		std::string::size_type pos = line.find(" | ");
+		if (pos == std::string::npos) {
+			std::cerr << "Error: bad input => " << line << std::endl;
+			continue;
+		}
+
+		std::string date = line.substr(0, pos);
+		std::string valueStr = line.substr(pos + 3);
+
+		if (!isValidDate(date)) {
+			std::cerr << "Error: bad input => " << date << std::endl;
+			continue;
+		}
+
+		float value = static_cast<float>(std::atof(valueStr.c_str()));
+
+		if (value < 0) {
+			std::cerr << "Error: not a positive number." << std::endl;
+			continue;
+		}
+		if (value > 1000) {
+			std::cerr << "Error: too large a number." << std::endl;
+			continue;
+		}
+
+		std::map<std::string, float>::const_iterator it = _database.lower_bound(date);
+		if (it != _database.end() && it->first == date) {
+			std::cout << date << ", value:" << value << ", exchange_rate:" << it->second << ", result:" << value * it->second << std::endl;
 		} else if (it != _database.begin()) {
-			//日付完全一致しなかったとき
-			// イテレーターを戻している
 			--it;
-			std::cout << date_for_search << ", value:" << value << ", exchange_rate:" << it->second << ", result:" << value * it->second << std::endl;
+			std::cout << date << ", value:" << value << ", exchange_rate:" << it->second << ", result:" << value * it->second << std::endl;
 		} else {
-			std::cerr << "Error: date not found in database => " << date_for_search << std::endl;
+			std::cerr << "Error: bad input => " << date << std::endl;
 		}
 	}
 }

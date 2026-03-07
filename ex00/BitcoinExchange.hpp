@@ -4,7 +4,6 @@
 #include <map>
 #include <vector>
 #include <string>
-#include <utility>
 
 class BitcoinExchange {
 public:
@@ -15,13 +14,13 @@ public:
 
 	void loadDatabase(const std::string &filename);
 	void loadInput(const std::string &filename);
-	const std::map<std::string, float> &getDatabase() const;
-	const std::vector<std::pair<std::string, float> > &getInput() const;
 	void execute() const;
 
 private:
 	std::map<std::string, float> _database;
-	std::vector<std::pair<std::string, float> > _input;
+	std::vector<std::string> _input;
+
+	static bool isValidDate(const std::string &date);
 };
 
 #endif
