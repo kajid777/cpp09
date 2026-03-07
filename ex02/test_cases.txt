@@ -1,0 +1,74 @@
+================================================================================
+ex02 PmergeMe テストケース
+コピペしてそのまま実行できます
+Ford-Johnson (merge-insertion sort) で vector / deque の処理時間を比較
+================================================================================
+
+--- 正常系 (成功するケース) ---
+
+./PmergeMe 3 5 9 7 4
+# Expected: Before/After/時間表示、昇順ソート済み
+
+./PmergeMe 1
+# Expected: 要素1個、そのまま
+
+./PmergeMe 2 1
+# Expected: 1 2 にソート
+
+./PmergeMe 5 4 3 2 1
+# Expected: 1 2 3 4 5 にソート（逆順）
+
+./PmergeMe 1 2 3 4 5
+# Expected: 既にソート済み
+
+./PmergeMe 42
+# Expected: 42 のまま
+
+./PmergeMe 100 50 25 75 10
+# Expected: 10 25 50 75 100 にソート
+
+./PmergeMe 9 8 7 6 5 4 3 2 1
+# Expected: 1 2 3 4 5 6 7 8 9（奇数個）
+
+./PmergeMe 1 1 1 1 1
+# Expected: 重複OK、1 1 1 1 1
+
+./PmergeMe 2147483647 1
+# Expected: 1 2147483647 (INT_MAX まで可)
+
+--- エラー系 ---
+
+./PmergeMe
+# Expected: Error (引数なし)
+
+./PmergeMe 0
+# Expected: Error (0は不可)
+
+./PmergeMe -1 2 3
+# Expected: Error (負数)
+
+./PmergeMe 1 2 -5
+# Expected: Error (負数)
+
+./PmergeMe 3 5 a 7
+# Expected: Error (非数字)
+
+./PmergeMe 1 2 3.14 4
+# Expected: Error (小数点)
+
+./PmergeMe 123abc
+# Expected: Error (数字と文字の混在)
+
+./PmergeMe ""
+# Expected: Error (空文字列・要シェル対応: ./PmergeMe "" で試す)
+
+./PmergeMe 2147483648
+# Expected: Error (INT_MAX 超過、環境により strtol の挙動注意)
+
+./PmergeMe 9999999999
+# Expected: Error (オーバーフロー)
+
+./PmergeMe 1 2 3 + 4
+# Expected: Error (+ は不正)
+
+================================================================================

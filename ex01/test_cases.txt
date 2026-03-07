@@ -1,0 +1,73 @@
+================================================================================
+ex01 RPN (逆ポーランド記法) 電卓 テストケース
+コピペしてそのまま実行できます
+================================================================================
+
+--- 正常系 (成功するケース) ---
+
+./RPN "3 4 +"
+# Expected: 7
+
+./RPN "8 3 -"
+# Expected: 5
+
+./RPN "6 7 *"
+# Expected: 42
+
+./RPN "9 3 /"
+# Expected: 3
+
+./RPN "3 4 + 5 *"
+# Expected: 35
+
+./RPN "8 4 2 / /"
+# Expected: 4
+
+./RPN "5"
+# Expected: 5
+
+./RPN "0 5 +"
+# Expected: 5
+
+./RPN "3 7 -"
+# Expected: -4
+
+./RPN "1 2 * 3 4 * +"
+# Expected: 14
+
+--- エラー系 ---
+
+./RPN
+# Expected: Error (引数なし)
+
+./RPN "10 5 +"
+# Expected: Error (2桁の数字は非対応)
+
+./RPN "3 a +"
+# Expected: Error (無効な文字)
+
+./RPN "3 4 %"
+# Expected: Error (無効な演算子)
+
+./RPN "3 +"
+# Expected: Error (オペランド不足)
+
+./RPN "+ 3 4"
+# Expected: Error (最初が演算子)
+
+./RPN "5 0 /"
+# Expected: Error (0除算)
+
+./RPN "3 4 5 +"
+# Expected: Error (オペランド過多)
+
+./RPN ""
+# Expected: Error (空の式)
+
+./RPN "   "
+# Expected: Error (スペースのみ)
+
+./RPN "3 - 4"
+# Expected: Error (マイナス時点でスタック1つ)
+
+================================================================================
