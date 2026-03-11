@@ -2,7 +2,7 @@
 #define BITCOINEXCHANGE_HPP
 
 #include <map>
-#include <vector>
+#include <list>
 #include <string>
 
 class BitcoinExchange {
@@ -18,7 +18,7 @@ public:
 
 private:
 	std::map<std::string, float> _database;
-	std::vector<std::string> _input;
+	std::list<std::string> _input;
 
 	static bool isValidDate(const std::string &date);
 };

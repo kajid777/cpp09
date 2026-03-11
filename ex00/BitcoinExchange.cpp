@@ -95,8 +95,8 @@ bool BitcoinExchange::isValidDate(const std::string &date) {
 }
 
 void BitcoinExchange::execute() const {
-	for (size_t i = 0; i < _input.size(); ++i) {
-		const std::string &line = _input[i];
+	for (std::list<std::string>::const_iterator lit = _input.begin(); lit != _input.end(); ++lit) {
+		const std::string &line = *lit;
 
 		std::string::size_type pos = line.find(" | ");
 		if (pos == std::string::npos) {

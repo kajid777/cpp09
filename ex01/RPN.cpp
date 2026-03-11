@@ -21,7 +21,7 @@ bool RPN::isOperator(const std::string &token) const {
 
 bool RPN::calcOperator(const std::string &token) {
 	if (_stack.size() < 2) {
-		std::cout << "Error" << std::endl;
+		std::cerr << "Error" << std::endl;
 		return false;
 	}
 	int b = _stack.top();
@@ -38,7 +38,7 @@ bool RPN::calcOperator(const std::string &token) {
 		result = a * b;
 	else {
 		if (b == 0) {
-			std::cout << "Error" << std::endl;
+			std::cerr << "Error" << std::endl;
 			return false;
 		}
 		result = a / b;
@@ -62,7 +62,7 @@ void RPN::execute(const std::string &expression) {
 	}
 
 	if (_stack.size() != 1) {
-		std::cout << "Error" << std::endl;
+		std::cerr << "Error" << std::endl;
 		return;
 	}
 	std::cout << _stack.top() << std::endl;
@@ -71,7 +71,7 @@ void RPN::execute(const std::string &expression) {
 bool RPN::pushNumber(const std::string &token) {
 	// 0から9までの1桁の自然数のみ許可
 	if (token.length() != 1 || !std::isdigit(token[0])) {
-		std::cout << "Error" << std::endl;
+		std::cerr << "Error" << std::endl;
 		return false;
 	}
 	int num = token[0] - '0';
