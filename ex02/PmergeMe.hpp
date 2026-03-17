@@ -79,10 +79,13 @@ private:
 //     [1, 5, 7, 8] に 3 を挿入 → [1, 3, 5, 7, 8]
 //     [1, 3, 5, 7, 8] に 2 を挿入 → [1, 2, 3, 5, 7, 8]
 //
-// ステップ5: あぶれ要素を挿入
-//   [1, 2, 3, 5, 7, 8] に 9 を挿入 → [1, 2, 3, 5, 7, 8, 9]
-//
 // 完成: [1, 2, 3, 5, 7, 8, 9]
+//
+// 【比較回数の最小化】
+// pend[k] < winners[k] が保証されているため、二分探索の範囲を
+// winners[k] の位置までに限定する。あぶれ要素は pend 末尾に追加し、
+// Jacobsthal 順で挿入することで、各グループの探索範囲が 2^g - 1 以下に
+// 収まり、理論上の最小比較回数を達成する。
 // ============================================================================
 template <typename Container>
 void PmergeMe::mergeInsertSort(Container& c) {
@@ -145,12 +148,15 @@ void PmergeMe::mergeInsertSort(Container& c) {
 		pairMap.erase(it);  // 使用済みのエントリを削除（重複対策）
 	}
 
+	// あぶれ要素を pend の末尾に追加（Jacobsthal 順で最適な位置に挿入するため）
+	if (hasStraggler)
+		pend.push_back(straggler);
+	std::size_t totalPend = pend.size();
+
 	// ========================================================================
 	// ステップ4: メインチェーンを構築する
 	// ========================================================================
 
-	// pend[0] < winners[0] なので、pend[0] を先頭に置き、その後にソート済み勝者を並べる
-	// 例: mainChain = [1, 5, 7, 8]
 	Container mainChain;
 	mainChain.push_back(pend[0]);
 	for (std::size_t i = 0; i < numPairs; i++)
@@ -160,35 +166,34 @@ void PmergeMe::mergeInsertSort(Container& c) {
 	// ステップ5: 残りの pend 要素を Jacobsthal 順で二分探索挿入
 	// ========================================================================
 
-	// pend[0] は既に挿入済み。pend[1] 以降を Jacobsthal 数に基づく最適な順序で挿入する。
-	// Jacobsthal 順を使う理由: 二分探索の比較回数を理論上最小限に抑えるため。
-	//
-	// 例: numPairs=3 → 挿入順序 = [2, 1]（pend[2]=3 を先に、pend[1]=2 を後に挿入）
-	//   mainChain = [1, 5, 7, 8]
-	//   pend[2]=3 を挿入 → [1, 3, 5, 7, 8]
-	//   pend[1]=2 を挿入 → [1, 2, 3, 5, 7, 8]
-	if (numPairs > 1) {
-		std::vector<std::size_t> order = generateInsertionOrder(numPairs);
+	// 各 winner の mainChain 内での位置を追跡する。
+	// pend[k] < winners[k] が保証されているため、二分探索の上界を winners[k] の
+	// 位置に制限でき、比較回数を理論上の最小値に抑えられる。
+	// あぶれ要素の「winner」はチェーン末尾（= mainChain.size()）とする。
+	std::vector<std::size_t> winnerPos(totalPend);
+	for (std::size_t i = 0; i < numPairs; i++)
+		winnerPos[i] = i + 1;
+	if (hasStraggler)
+		winnerPos[numPairs] = mainChain.size();
+
+	if (totalPend > 1) {
+		std::vector<std::size_t> order = generateInsertionOrder(totalPend);
 		for (std::size_t i = 0; i < order.size(); i++) {
-			int val = pend[order[i]];
-			// std::lower_bound: メインチェーン内で val 以上の最初の位置を二分探索で求める
+			std::size_t pendIdx = order[i];
+			int val = pend[pendIdx];
+			std::size_t bound = winnerPos[pendIdx];
 			typename Container::iterator pos =
-				std::lower_bound(mainChain.begin(), mainChain.end(), val);
+				std::lower_bound(mainChain.begin(), mainChain.begin() + bound, val);
+			std::size_t insertPos = static_cast<std::size_t>(
+				pos - mainChain.begin());
 			mainChain.insert(pos, val);
+			for (std::size_t j = 0; j < totalPend; j++) {
+				if (winnerPos[j] >= insertPos)
+					winnerPos[j]++;
+			}
 		}
 	}
 
-	// ========================================================================
-	// ステップ6: あぶれ要素(straggler)があれば最後に挿入
-	// ========================================================================
-
-	if (hasStraggler) {
-		typename Container::iterator pos =
-			std::lower_bound(mainChain.begin(), mainChain.end(), straggler);
-		mainChain.insert(pos, straggler);
-	}
-
-	// ソート結果を元のコンテナに書き戻す
 	c = mainChain;
 }
 

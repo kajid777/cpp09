@@ -157,26 +157,20 @@ std::vector<std::size_t> PmergeMe::generateInsertionOrder(std::size_t pendSize) 
 //   5. ソート前 / ソート後 / 各コンテナの処理時間を表示
 // ============================================================================
 void PmergeMe::run(int argc, char** argv) {
-	// 1. 入力をパース
 	parseInput(argc, argv);
 
-	// 2. ソート前の状態を保存（表示用）
 	std::vector<int> before(_vec);
 
-	// 3. std::vector でソート & 時間計測
 	clock_t startVec = clock();
 	mergeInsertSort(_vec);
 	clock_t endVec = clock();
-	// clock() の差分をマイクロ秒に変換: (ticks / CLOCKS_PER_SEC) * 1,000,000
 	double timeVec = static_cast<double>(endVec - startVec) / CLOCKS_PER_SEC * 1000000.0;
 
-	// 4. std::deque でソート & 時間計測
 	clock_t startDeq = clock();
 	mergeInsertSort(_deq);
 	clock_t endDeq = clock();
 	double timeDeq = static_cast<double>(endDeq - startDeq) / CLOCKS_PER_SEC * 1000000.0;
 
-	// 5. 結果を表示
 	display("Before:", before);
 	std::vector<int> after(_vec.begin(), _vec.end());
 	display("After: ", after);
