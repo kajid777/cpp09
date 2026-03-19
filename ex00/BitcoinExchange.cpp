@@ -31,15 +31,24 @@ void BitcoinExchange::loadDatabase(const std::string &filename) {
 
 	while (std::getline(file, line)) {
 		std::string::size_type pos = line.find(',');
-		// カンマがない行は不正なのでスキップ
 		if (pos == std::string::npos)
 			continue;
 
 		std::string date = line.substr(0, pos);
 		std::string valueStr = line.substr(pos + 1);
-		float value = static_cast<float>(std::atof(valueStr.c_str()));
 
-		_database[date] = value;
+		if (!isValidDate(date))
+			continue;
+
+		if (valueStr.empty())
+			continue;
+		char *end;
+		errno = 0;
+		double val = std::strtod(valueStr.c_str(), &end);
+		if (end == valueStr.c_str() || *end != '\0' || errno == ERANGE || val < 0)
+			continue;
+
+		_database[date] = static_cast<float>(val);
 	}
 	file.close();
 }
@@ -52,7 +61,10 @@ void BitcoinExchange::loadInput(const std::string &filename) {
 	}
 
 	std::string line;
-	std::getline(file, line);
+	if (!std::getline(file, line) || line != "date | value") {
+		std::cerr << "Error: invalid header in input file." << std::endl;
+		std::exit(1);
+	}
 
 	while (std::getline(file, line))
 		_input.push_back(line);
@@ -101,7 +113,7 @@ bool BitcoinExchange::isValidValue(const std::string &value) {
 	char *end;
 	errno = 0;
 	std::strtod(value.c_str(), &end);
-	if (errno == ERANGE)
+	if (end == value.c_str() || errno == ERANGE)
 		return false;
 	while (*end == ' ' || *end == '\t')
 		++end;
