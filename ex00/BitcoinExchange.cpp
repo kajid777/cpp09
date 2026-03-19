@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
+#include <cerrno>
 
 BitcoinExchange::BitcoinExchange() {}
 
@@ -21,7 +22,7 @@ void BitcoinExchange::loadDatabase(const std::string &filename) {
 	std::ifstream file(filename.c_str());
 	if (!file.is_open()) {
 		std::cerr << "Error: could not open file." << std::endl;
-		return;
+		std::exit(1);
 	}
 
 	std::string line;
@@ -47,7 +48,7 @@ void BitcoinExchange::loadInput(const std::string &filename) {
 	std::ifstream file(filename.c_str());
 	if (!file.is_open()) {
 		std::cerr << "Error: could not open file." << std::endl;
-		return;
+		std::exit(1);
 	}
 
 	std::string line;
@@ -94,6 +95,19 @@ bool BitcoinExchange::isValidDate(const std::string &date) {
 	return day <= maxDay;
 }
 
+bool BitcoinExchange::isValidValue(const std::string &value) {
+	if (value.empty())
+		return false;
+	char *end;
+	errno = 0;
+	std::strtod(value.c_str(), &end);
+	if (errno == ERANGE)
+		return false;
+	while (*end == ' ' || *end == '\t')
+		++end;
+	return *end == '\0';
+}
+
 void BitcoinExchange::execute() const {
 	for (std::list<std::string>::const_iterator lit = _input.begin(); lit != _input.end(); ++lit) {
 		const std::string &line = *lit;
@@ -109,6 +123,11 @@ void BitcoinExchange::execute() const {
 
 		if (!isValidDate(date)) {
 			std::cerr << "Error: bad input => " << date << std::endl;
+			continue;
+		}
+
+		if (!isValidValue(valueStr)) {
+			std::cerr << "Error: bad input => " << line << std::endl;
 			continue;
 		}
 

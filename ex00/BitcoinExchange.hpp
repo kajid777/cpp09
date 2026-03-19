@@ -21,6 +21,7 @@ private:
 	std::list<std::string> _input;
 
 	static bool isValidDate(const std::string &date);
+	static bool isValidValue(const std::string &value);
 };
 
 #endif

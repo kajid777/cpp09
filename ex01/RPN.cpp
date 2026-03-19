@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
+#include <climits>
 
 RPN::RPN() {}
 
@@ -29,21 +30,25 @@ bool RPN::calcOperator(const std::string &token) {
 	int a = _stack.top();
 	_stack.pop();
 
-	int result;
+	long long result;
 	if (token == "+")
-		result = a + b;
+		result = static_cast<long long>(a) + b;
 	else if (token == "-")
-		result = a - b;
+		result = static_cast<long long>(a) - b;
 	else if (token == "*")
-		result = a * b;
+		result = static_cast<long long>(a) * b;
 	else {
 		if (b == 0) {
 			std::cerr << "Error" << std::endl;
 			return false;
 		}
-		result = a / b;
+		result = static_cast<long long>(a) / b;
 	}
-	_stack.push(result);
+	if (result < INT_MIN || result > INT_MAX) {
+		std::cerr << "Error" << std::endl;
+		return false;
+	}
+	_stack.push(static_cast<int>(result));
 	return true;
 }
 
