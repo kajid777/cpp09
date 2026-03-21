@@ -7,8 +7,6 @@
 #include <stdexcept>
 #include <cctype>
 
-// === 正統派カノニカルフォーム ===
-
 PmergeMe::PmergeMe() {}
 
 PmergeMe::PmergeMe(const PmergeMe& other)
@@ -24,16 +22,7 @@ PmergeMe& PmergeMe::operator=(const PmergeMe& other) {
 
 PmergeMe::~PmergeMe() {}
 
-// ============================================================================
-// parseInput: コマンドライン引数を解析して正の整数列として取り込む
-//
-// 各引数について以下をチェック:
-//   - 空文字列でないこと
-//   - 全ての文字が数字であること（負号やアルファベット不可）
-//   - 数値が 1 以上 INT_MAX 以下であること（0 も不可）
-//
-// 異常があれば例外 "Error" を投げる
-// ============================================================================
+// 引数を正の整数として検証し _vec と _deq に格納する
 void PmergeMe::parseInput(int argc, char** argv) {
 	for (int i = 1; i < argc; i++) {
 		std::string arg(argv[i]);
@@ -65,10 +54,7 @@ void PmergeMe::parseInput(int argc, char** argv) {
 		throw std::runtime_error("Error");
 }
 
-// ============================================================================
-// display: ラベル付きで整数列を1行に表示する
-//   例: "Before: 3 5 9 7 4"
-// ============================================================================
+// ラベル付きで整数列を1行表示する
 void PmergeMe::display(const std::string& label, const std::vector<int>& c) const {
 	std::cout << label;
 	for (std::size_t i = 0; i < c.size(); i++)
@@ -76,34 +62,7 @@ void PmergeMe::display(const std::string& label, const std::vector<int>& c) cons
 	std::cout << std::endl;
 }
 
-// ============================================================================
-// generateInsertionOrder: Jacobsthal 数に基づく挿入順序を生成する
-//
-// 【Jacobsthal 数とは】
-//   J(0)=0, J(1)=1, J(n) = J(n-1) + 2*J(n-2)
-//   → 0, 1, 1, 3, 5, 11, 21, 43, 85, ...
-//
-// 【なぜ Jacobsthal 順で挿入するのか】
-//   Ford-Johnson アルゴリズムの核心は「比較回数の最小化」。
-//   各 pend 要素を挿入する際、二分探索の対象範囲を 2^k - 1 個以内に
-//   抑えることで、各挿入が最大 k 回の比較で済むようにする。
-//   Jacobsthal 数に基づくグループ分けがこの性質を実現する。
-//
-// 【挿入グループの作り方】
-//   Jacobsthal 境界列: jn = [1, 3, 5, 11, 21, ...]
-//
-//   各グループ k では、インデックス jn[k]-1 から jn[k-1] まで降順に挿入:
-//     グループ0: pend[0] → 既に挿入済み（メインチェーン構築時に先頭に配置）
-//     グループ1: pend[2], pend[1]         （jn[1]=3 から jn[0]=1 の間）
-//     グループ2: pend[4], pend[3]         （jn[2]=5 から jn[1]=3 の間）
-//     グループ3: pend[10],...,pend[5]     （jn[3]=11 から jn[2]=5 の間）
-//     ...
-//
-//   pendSize を超えるインデックスはスキップされる。
-//
-// 引数: pendSize = pend 配列の全要素数
-// 戻り値: pend[1]〜pend[pendSize-1] のインデックスを最適な挿入順で並べた配列
-// ============================================================================
+// Jacobsthal 数に基づいて pend[1]〜 の挿入順インデックス列を返す
 std::vector<std::size_t> PmergeMe::generateInsertionOrder(std::size_t pendSize) {
 	std::vector<std::size_t> order;
 
@@ -111,13 +70,11 @@ std::vector<std::size_t> PmergeMe::generateInsertionOrder(std::size_t pendSize) 
 	if (pendSize <= 1)
 		return order;
 
-	// Jacobsthal 境界列を生成: [1, 3, 5, 11, 21, 43, ...]
-	// pendSize 以上の値が出るまで生成する
+	// 境界列: jn[k] = jn[k-1] + 2 * jn[k-2] （1, 3, 5, 11, 21, ...）
 	std::vector<std::size_t> jn;
 	jn.push_back(1);   // jn[0] = 1
 	jn.push_back(3);   // jn[1] = 3
 	while (jn.back() < pendSize) {
-		// 漸化式: jn[k] = jn[k-1] + 2 * jn[k-2]
 		std::size_t next = jn[jn.size() - 1] + 2 * jn[jn.size() - 2];
 		jn.push_back(next);
 	}
@@ -147,15 +104,7 @@ std::vector<std::size_t> PmergeMe::generateInsertionOrder(std::size_t pendSize) 
 	return order;
 }
 
-// ============================================================================
-// run: プログラムのメイン処理フロー
-//
-//   1. コマンドライン引数をパースして _vec と _deq に格納
-//   2. ソート前の状態を保存
-//   3. std::vector に対して Ford-Johnson ソートを実行し、処理時間を計測
-//   4. std::deque  に対して Ford-Johnson ソートを実行し、処理時間を計測
-//   5. ソート前 / ソート後 / 各コンテナの処理時間を表示
-// ============================================================================
+// vector と deque それぞれをソートして処理時間を表示する
 void PmergeMe::run(int argc, char** argv) {
 	parseInput(argc, argv);
 
